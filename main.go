@@ -1,28 +1,30 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net/http"
+	"time"
 
-	"github.com/gorilla/mux"
+	"github.com/kataras/iris"
+	"github.com/kataras/iris/middleware/logger"
+	"github.com/kataras/iris/middleware/recover"
 )
 
-//PingHandler - check if server is steel alive
-func PingHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "steel alive")
-}
-
-//AllProxiesHandler - get all proxies
-func AllProxiesHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "not implemented yet !")
-}
-
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc("/ping", PingHandler).Methods("GET")
-	r.HandleFunc("/proxy", AllProxiesHandler).Methods("GET")
-	if err := http.ListenAndServe(":3000", r); err != nil {
-		log.Fatal(err)
-	}
+	app := iris.New()
+	/**
+	* Logging
+	 */
+	app.Logger().SetLevel("debug")
+	app.Use(recover.New())
+	app.Use(logger.New())
+
+	/**
+	* Routes
+	 */
+
+	app.Get("/ping", func(ctx iris.Context) {
+		ctx.Writef("Pong %d", int32(time.Now().Unix()))
+	})
+
+	//Start server
+	app.Run(iris.Addr(":5555"), iris.WithoutServerError(iris.ErrServerClosed))
 }
